@@ -1,3 +1,4 @@
 data/readings.db
 data/*.db
 reports/*.png
+plan.md
