@@ -80,7 +80,7 @@ class PowerPlotter:
         
         # Aggregate by hour
         hourly = defaultdict(list)
-        for _, timestamp_str, amps in rows:
+        for timestamp_str, amps in rows:
             ts = datetime.fromisoformat(timestamp_str)
             hour = ts.hour
             hourly[hour].append(amps)
@@ -141,7 +141,7 @@ class PowerPlotter:
         # Extract timestamps and values
         timestamps = []
         amps = []
-        for _, timestamp_str, amp_value in rows:
+        for timestamp_str, amp_value in rows:
             ts = datetime.fromisoformat(timestamp_str)
             timestamps.append(ts)
             amps.append(amp_value)
@@ -191,7 +191,7 @@ class PowerPlotter:
         
         # Filter to off-peak hours
         off_peak_amps = []
-        for _, timestamp_str, amp_value in rows:
+        for timestamp_str, amp_value in rows:
             ts = datetime.fromisoformat(timestamp_str)
             hour = ts.hour
             
@@ -262,7 +262,7 @@ class PowerPlotter:
         weekday_amps = defaultdict(list)
         day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         
-        for _, timestamp_str, amp_value in rows:
+        for timestamp_str, amp_value in rows:
             ts = datetime.fromisoformat(timestamp_str)
             weekday = ts.weekday()  # 0=Monday, 6=Sunday
             weekday_amps[weekday].append(amp_value)
