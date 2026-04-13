@@ -1,0 +1,58 @@
+[Unit]
+Description=EV Power Monitor - RPICT3V1 Current Transformer Data Logger
+Documentation=file:///home/pi/EV_Monitor/README.md
+After=network.target
+
+# Start after network is available, but not critical if it fails
+Wants=network-online.target
+Before=graphical.target
+
+[Service]
+# Run as unprivileged user (recommended)
+User=pi
+Group=pi
+
+# Set working directory to project root
+WorkingDirectory=/home/pi/EV_Monitor
+
+# Main process command
+ExecStart=/usr/bin/python3 /home/pi/EV_Monitor/reader.py
+
+# Process handling
+Type=simple
+Restart=on-failure
+RestartSec=10
+
+# Performance limits
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=power-monitor
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/home/pi/EV_Monitor/data /home/pi/EV_Monitor/reports /home/pi/EV_Monitor/backups
+
+# Resource limits
+# CPU: Single core (1 core = 100%)
+CPUQuota=100%
+# Memory: 100 MB max
+MemoryMax=100M
+# Nice priority (lower = higher priority, range -20 to 19)
+Nice=5
+
+# Timeout for graceful shutdown (SIGTERM, then SIGKILL)
+TimeoutStopSec=10
+
+# Restart behavior
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+[Install]
+# Start on boot
+WantedBy=multi-user.target
+
+# Optional: If you want to automatically start after network is ready:
+# WantedBy=network-online.target
