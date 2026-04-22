@@ -16,6 +16,8 @@ This project consists of:
 - **`reader.py`** — Daemon that reads current data from RPICT3V1 serial port and buffers to database
 - **`logger.py`** — Database abstraction layer for efficient data storage
 - **`plotter.py`** — Generates 4 visualization charts and feasibility analysis
+- **`util/`** — Utility scripts for setup, diagnostics, and monitoring
+- **`tests/`** — Unit tests for core components (38 tests, all passing)
 - **Simulation tools** — Test the system without hardware
 
 ---
@@ -83,7 +85,7 @@ Expected output: `✓ All required dependencies are installed!`
 
 ## Testing Without Hardware (Simulation)
 
-Before deploying to actual hardware, test the entire pipeline with simulated data. This allows you to verify database writes, chart generation, and EV feasibility logic without waiting for 30 days of real data collection.
+Before deploying to actual hardware, test the entire pipeline with simulated data. This allows you to verify database writes, chart generation, and EV feasibility logic without waiting for 30 days of real data collection. **Run unit tests with:** `python3 -m pytest tests/`
 
 ### Quick Test (5 minutes)
 
@@ -101,7 +103,7 @@ python3 plotter.py
 
 **Phase 1 — Test Database + Plotter:**
 ```bash
-python3 init_db.py                                          # Fresh database
+python3 util/init_db.py                                          # Fresh database
 python3 simulate_data.py --days 30 --baseline 20 --noise 2  # Generate test data
 python3 plotter.py                                          # Create charts
 ```
@@ -150,7 +152,7 @@ simulate_serial.py:
 ### Step 2: Test Serial Connection
 
 ```bash
-python3 test_serial.py
+python3 util/test_serial.py
 ```
 
 This reads 20 samples and labels each column. **Important:** Note which column contains RMS current (typically 0–100A range), then update the `parse_line()` method in `reader.py` with the correct column index.
@@ -158,7 +160,7 @@ This reads 20 samples and labels each column. **Important:** Note which column c
 ### Step 3: Initialize Database
 
 ```bash
-python3 init_db.py
+python3 util/init_db.py
 ```
 
 This creates directories (`data/`, `reports/`, `backups/`) and initializes the SQLite database.
@@ -172,7 +174,13 @@ python3 reader.py
 
 Press Ctrl+C to stop gracefully (flushes final buffer to DB).
 
-#### Option B: Systemd Daemon (for production)
+#### Option B: Check System Status
+
+Monitor collection progress without waiting for hardware:
+```bash
+python3 util/status.py          # Human-readable status
+python3 util/status.py --json   # JSON output for monitoring systems
+```
 
 1. **Install the systemd service:**
    ```bash
@@ -213,9 +221,15 @@ ev-monitor-project/
 ├── reader.py              # Serial reader daemon
 ├── logger.py              # SQLite database wrapper
 ├── plotter.py             # Chart generation & analysis
-├── init_db.py             # Database initialization
-├── test_serial.py         # Serial format diagnostic
-├── check_dependencies.py  # Dependency verification
+├── main.py                # Quick reference guide
+├── util/
+│   ├── init_db.py         # Database initialization
+│   ├── status.py          # System health monitoring
+│   └── test_serial.py     # Serial format diagnostic
+├── tests/
+│   ├── test_logger.py     # Database unit tests (22 tests)
+│   ├── test_reader.py     # Serial reader unit tests (16 tests)
+│   └── conftest.py        # pytest configuration
 ├── simulate_data.py       # Generate 30-day simulated dataset
 ├── simulate_serial.py     # Mock RPICT3V1 serial data
 ├── power-monitor.service  # Systemd unit file (for Raspberry Pi)
@@ -247,17 +261,23 @@ ev-monitor-project/
 
 ### Utility Scripts
 
-- **`init_db.py`** — Creates necessary directories and initializes SQLite database with proper schema.
+- **`util/init_db.py`** — Creates necessary directories and initializes SQLite database with proper schema.
 
-- **`test_serial.py`** — Diagnostic tool to identify which column of RPICT3V1 output contains RMS current.
+- **`util/status.py`** — System health monitoring tool. Displays real-time collection metrics, database size, daemon status, and JSON output for integration.
 
-- **`check_dependencies.py`** — Verifies all required Python packages are installed.
+- **`util/test_serial.py`** — Diagnostic tool to identify which column of RPICT3V1 output contains RMS current.
 
 ### Testing & Simulation Scripts
 
 - **`simulate_data.py`** — Generates 30 days of realistic power consumption data. Insert directly into database for testing without hardware.
 
 - **`simulate_serial.py`** — Mock RPICT3V1 serial output. Test reader.py without actual hardware.
+
+### Test Suite
+
+- **`tests/test_logger.py`** — 22 unit tests for database operations (all passing)
+- **`tests/test_reader.py`** — 16 unit tests for serial parsing and buffering (all passing)
+- **`tests/conftest.py`** — pytest configuration for proper module imports
 
 ### Configuration
 
@@ -270,12 +290,12 @@ ev-monitor-project/
 ## Deployment Checklist
 
 - [ ] Clone/download project and install dependencies
-- [ ] Run `python3 check_dependencies.py` to verify packages
+- [ ] Run `python3 -m pytest tests/` to verify unit tests pass
 - [ ] Test with simulated data: `python3 simulate_data.py && python3 plotter.py`
 - [ ] Connect RPICT3V1 hardware to Raspberry Pi
-- [ ] Run `python3 test_serial.py` and verify RMS current column
+- [ ] Run `python3 util/test_serial.py` and verify RMS current column
 - [ ] Update `parse_line()` method in `reader.py` with correct column index
-- [ ] Run `python3 init_db.py` to create database
+- [ ] Run `python3 util/init_db.py` to create database
 - [ ] Start reader manually: `python3 reader.py` (test for errors)
 - [ ] (Optional) Install as systemd service for auto-startup
 - [ ] Wait 7–30 days for data collection
