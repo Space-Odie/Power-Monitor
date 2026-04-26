@@ -124,9 +124,9 @@ class SerialReader:
             if not tokens:
                 return None
             
-            # Index 4 is RMS current (verified with test_serial.py)
+            # Index 3 is RMS current (verified with test_serial.py)
             # CUSTOMIZE THIS based on test_serial.py output
-            amps = float(tokens[4])
+            amps = float(tokens[3])
             return amps
         
         except (IndexError, ValueError) as e:
